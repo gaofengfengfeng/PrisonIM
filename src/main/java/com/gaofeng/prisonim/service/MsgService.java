@@ -8,8 +8,12 @@ import com.gaofeng.prisonDBlib.model.MessageRecordMapper;
 import com.gaofeng.prisonim.beans.msg.SendReq;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -74,7 +78,35 @@ public class MsgService {
         } catch (Exception e) {
             JLog.error("pull audit msgs db error errMsg=" + e.getMessage(), 104290954);
         }
-
         return sendTypes;
+    }
+
+    /**
+     * 聊天记录批量通过/不通过审核
+     *
+     * @param messageStatus
+     * @param recordIds
+     *
+     * @return 1:成功 2：含有非待审核记录 3：数据库错误
+     */
+    @Transactional
+    public Integer audit(Integer messageStatus, List<Long> recordIds) {
+        JLog.info("auditPass service recordIds size=" + recordIds.size());
+        // 查找出待审核记录
+        List<Long> waitAuditRecords = mrm.findWaitAuditRecords();
+        // 判断待要更改的记录id是否在所有待审核记录id的子集中
+        if (!waitAuditRecords.containsAll(recordIds)) {
+            JLog.error("illegal recordIds=" + Arrays.toString(recordIds.toArray()), 104291138);
+            return 2;
+        }
+        Integer updateRet = mrm.batchUpdateMessageStatusByRecordId(messageStatus, recordIds);
+        // 批量更新失败，回滚事务，返回false
+        if (!updateRet.equals(recordIds.size())) {
+            JLog.error("db error batch update messageStatus failed updateRet=" + updateRet,
+                    104291054);
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            return 3;
+        }
+        return 1;
     }
 }

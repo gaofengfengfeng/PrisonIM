@@ -1,9 +1,12 @@
 package com.gaofeng.prisonim.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.didi.meta.javalib.JLog;
 import com.didi.meta.javalib.JResponse;
 import com.gaofeng.prisonDBlib.beans.msgrecord.SendType;
+import com.gaofeng.prisonDBlib.model.MessageRecord;
 import com.gaofeng.prisonim.beans.audit.AuditPullReq;
+import com.gaofeng.prisonim.beans.audit.AuditReq;
 import com.gaofeng.prisonim.service.MsgService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -56,9 +61,65 @@ public class AuditControler {
     }
 
     @RequestMapping(value = "/pass")
-    public JResponse auditPass(HttpServletRequest request) {
+    public JResponse auditPass(HttpServletRequest request, @RequestBody @Valid AuditReq auditReq) {
+        JLog.info("auditPass policeId=" + auditReq.getPoliceId() + " recordIds=" +
+                Arrays.toString(auditReq.getRecordIds().toArray()));
         JResponse jResponse = JResponse.initResponse(request, JResponse.class);
+
+        // 更新数据状态
+        Integer updateRet = ms.audit(MessageRecord.MessageStatus.AUDIT_PASS,
+                auditReq.getRecordIds());
+
+        // 1:成功 2：含有非待审核记录 3：数据库错误
+        switch (updateRet) {
+            case 1:
+                break;
+            case 2:
+                jResponse.setErrNo(104291138);
+                jResponse.setErrMsg("illegal recordIds");
+                break;
+            case 3:
+                jResponse.setErrNo(104291054);
+                jResponse.setErrMsg("db error");
+                break;
+            default:
+                jResponse.setErrNo(104291141);
+                jResponse.setErrMsg("unknown exception");
+                break;
+        }
+
         return jResponse;
     }
 
+    @RequestMapping(value = "/unpass")
+    public JResponse auditUnpass(HttpServletRequest request,
+                                 @RequestBody @Valid AuditReq auditReq) {
+        JLog.info("auditUnpass policeId=" + auditReq.getPoliceId() + " recordIds=" +
+                Arrays.toString(auditReq.getRecordIds().toArray()));
+        JResponse jResponse = JResponse.initResponse(request, JResponse.class);
+
+        // 更新数据状态
+        Integer updateRet = ms.audit(MessageRecord.MessageStatus.AUDIT_FAILD,
+                auditReq.getRecordIds());
+
+        // 1:成功 2：含有非待审核记录 3：数据库错误
+        switch (updateRet) {
+            case 1:
+                break;
+            case 2:
+                jResponse.setErrNo(104291138);
+                jResponse.setErrMsg("illegal recordIds");
+                break;
+            case 3:
+                jResponse.setErrNo(104291054);
+                jResponse.setErrMsg("db error");
+                break;
+            default:
+                jResponse.setErrNo(104291141);
+                jResponse.setErrMsg("unknown exception");
+                break;
+        }
+
+        return jResponse;
+    }
 }
