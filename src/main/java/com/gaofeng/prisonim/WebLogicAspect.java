@@ -2,7 +2,7 @@ package com.gaofeng.prisonim;
 
 import com.alibaba.fastjson.JSONObject;
 import com.didi.meta.javalib.JResponse;
-import com.gaofeng.beans.common.BaseReq;
+import com.gaofeng.prisonim.beans.common.BaseReq;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.AfterReturning;

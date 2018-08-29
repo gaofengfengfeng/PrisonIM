@@ -1,4 +1,4 @@
-package com.gaofeng.beans.common;
+package com.gaofeng.prisonim.beans.common;
 
 import com.didi.meta.javalib.JRequest;
 
