@@ -1,9 +1,8 @@
 package com.gaofeng.prisonim.controller;
 
-import com.alibaba.fastjson.JSON;
 import com.didi.meta.javalib.JLog;
 import com.didi.meta.javalib.JResponse;
-import com.gaofeng.prisonDBlib.beans.msgrecord.SendType;
+import com.gaofeng.prisonDBlib.beans.audit.SendType;
 import com.gaofeng.prisonDBlib.model.MessageRecord;
 import com.gaofeng.prisonim.beans.audit.AuditPullReq;
 import com.gaofeng.prisonim.beans.audit.AuditReq;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 

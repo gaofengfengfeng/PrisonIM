@@ -2,7 +2,8 @@ package com.gaofeng.prisonim.service;
 
 import com.didi.meta.javalib.IdUtil;
 import com.didi.meta.javalib.JLog;
-import com.gaofeng.prisonDBlib.beans.msgrecord.SendType;
+import com.gaofeng.prisonDBlib.beans.audit.SendType;
+import com.gaofeng.prisonDBlib.beans.msgrecord.WaitReadMsgs;
 import com.gaofeng.prisonDBlib.model.MessageRecord;
 import com.gaofeng.prisonDBlib.model.MessageRecordMapper;
 import com.gaofeng.prisonim.beans.msg.SendReq;
@@ -11,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -77,6 +77,7 @@ public class MsgService {
             sendTypes = mrm.findAuditMsgRecord();
         } catch (Exception e) {
             JLog.error("pull audit msgs db error errMsg=" + e.getMessage(), 104290954);
+            return null;
         }
         return sendTypes;
     }
@@ -108,5 +109,25 @@ public class MsgService {
             return 3;
         }
         return 1;
+    }
+
+    /**
+     * 给出接收人的id，查找出所有发送给他的消息
+     *
+     * @param receiverId
+     *
+     * @return
+     */
+    public List<WaitReadMsgs> pullMsgs(Long receiverId) {
+        JLog.info("pullMsgs service receiverId=" + receiverId);
+        List<WaitReadMsgs> waitReadMsgs = new ArrayList<>();
+        try {
+            waitReadMsgs = mrm.findWaitReadMsgs(receiverId);
+        } catch (Exception e) {
+            JLog.error("pullMsgs db error receiverId=" + receiverId + " errMsg=" + e.getMessage()
+                    , 104302313);
+            return null;
+        }
+        return waitReadMsgs;
     }
 }

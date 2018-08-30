@@ -2,6 +2,8 @@ package com.gaofeng.prisonim.controller;
 
 import com.didi.meta.javalib.JLog;
 import com.didi.meta.javalib.JResponse;
+import com.gaofeng.prisonDBlib.beans.msgrecord.WaitReadMsgs;
+import com.gaofeng.prisonim.beans.msg.PullReq;
 import com.gaofeng.prisonim.beans.msg.SendReq;
 import com.gaofeng.prisonim.service.MsgService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * @Author: gaofeng
@@ -52,6 +55,23 @@ public class MsgController {
             jResponse.setErrMsg("db error");
         }
 
+        return jResponse;
+    }
+
+    @RequestMapping(value = "/pull")
+    public JResponse pull(HttpServletRequest request, @RequestBody @Valid PullReq pullReq) {
+        JLog.info("msg pull receiverId=" + pullReq.getReceiverId());
+        JResponse jResponse = JResponse.initResponse(request, JResponse.class);
+
+        List<WaitReadMsgs> waitReadMsgs = ms.pullMsgs(pullReq.getReceiverId());
+
+        if (waitReadMsgs == null) {
+            jResponse.setErrNo(104302313);
+            jResponse.setErrMsg("db error");
+            return jResponse;
+        }
+
+        jResponse.setData(waitReadMsgs);
         return jResponse;
     }
 }
