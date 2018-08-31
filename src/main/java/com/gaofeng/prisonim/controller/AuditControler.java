@@ -34,7 +34,7 @@ public class AuditControler {
     }
 
     /**
-     * 拉去审核消息
+     * 拉取审核消息
      *
      * @param request
      * @param auditPullReq
@@ -73,7 +73,7 @@ public class AuditControler {
         JResponse jResponse = JResponse.initResponse(request, JResponse.class);
 
         // 更新数据状态
-        Integer updateRet = ms.audit(MessageRecord.MessageStatus.AUDIT_PASS,
+        Integer updateRet = ms.messageStatusChange(MessageRecord.MessageStatus.AUDIT_PASS,
                 auditReq.getRecordIds());
 
         // 1:成功 2：含有非待审核记录 3：数据库错误
@@ -113,7 +113,7 @@ public class AuditControler {
         JResponse jResponse = JResponse.initResponse(request, JResponse.class);
 
         // 更新数据状态
-        Integer updateRet = ms.audit(MessageRecord.MessageStatus.AUDIT_FAILD,
+        Integer updateRet = ms.messageStatusChange(MessageRecord.MessageStatus.AUDIT_FAILD,
                 auditReq.getRecordIds());
 
         // 1:成功 2：含有非待审核记录 3：数据库错误

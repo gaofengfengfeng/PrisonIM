@@ -84,7 +84,68 @@ public class MsgService {
     }
 
     /**
-     * 聊天记录批量通过/不通过审核
+     * 更新消息为已送达状态
+     *
+     * @param auditPassRecords
+     * @param auditUnpassRecords
+     *
+     * @return
+     */
+    @Transactional
+    public Integer messageStatusChange2Received(List<Long> auditPassRecords,
+                                                List<Long> auditUnpassRecords) {
+        JLog.info("messageStatusChange2Received auditPassRecords size=" + auditPassRecords.size()
+                + " auditUnpassRecords size=" + auditUnpassRecords.size());
+        Integer updateRet = null;
+        // 如果相应的list不为0， 则进行相应的更新操作
+        if (auditPassRecords.size() != 0) {
+            updateRet = messageStatusChange(MessageRecord.MessageStatus.RECEIVED, auditPassRecords);
+            if (updateRet != 1) {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+                return updateRet;
+            }
+        }
+
+        if (auditUnpassRecords.size() != 0) {
+            updateRet = messageStatusChange(MessageRecord.MessageStatus.UNPASS_RESULT_RECEIVED,
+                    auditUnpassRecords);
+            if (updateRet != 1) {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+                return updateRet;
+            }
+        }
+
+        return updateRet;
+    }
+
+    public Integer messageStatusChange2Read(List<Long> auditPassRecords,
+                                            List<Long> auditUnpassRecords) {
+        JLog.info("messageStatusChange2Read auditPassRecords size=" + auditPassRecords.size()
+                + " auditUnpassRecords size=" + auditUnpassRecords.size());
+        Integer updateRet = null;
+        // 如果相应的list不为0， 则进行相应的更新操作
+        if (auditPassRecords.size() != 0) {
+            updateRet = messageStatusChange(MessageRecord.MessageStatus.READ, auditPassRecords);
+            if (updateRet != 1) {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+                return updateRet;
+            }
+        }
+
+        if (auditUnpassRecords.size() != 0) {
+            updateRet = messageStatusChange(MessageRecord.MessageStatus.UNPASS_RESULT_READ,
+                    auditUnpassRecords);
+            if (updateRet != 1) {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+                return updateRet;
+            }
+        }
+
+        return updateRet;
+    }
+
+    /**
+     * 更新消息的状态
      *
      * @param messageStatus
      * @param recordIds
@@ -92,16 +153,38 @@ public class MsgService {
      * @return 1:成功 2：含有非待审核记录 3：数据库错误
      */
     @Transactional
-    public Integer audit(Integer messageStatus, List<Long> recordIds) {
-        JLog.info("auditPass service recordIds size=" + recordIds.size());
-        // 查找出待审核记录
-        List<Long> waitAuditRecords = mrm.findWaitAuditRecords();
+    public Integer messageStatusChange(Integer messageStatus, List<Long> recordIds) {
+        JLog.info("messageStatusChange service recordIds size=" + recordIds.size() + " " +
+                "messageStatus=" + messageStatus);
+
+        // 新状态对应的之前在数据库内的数据
+        List<Long> recordsInDB = new ArrayList<>();
+        if (messageStatus.equals(MessageRecord.MessageStatus.AUDIT_PASS) ||
+                messageStatus.equals(MessageRecord.MessageStatus.AUDIT_FAILD)) {
+            // 审核通过/不通过，查找需要等待审核，messageStatus=1的记录
+            recordsInDB = mrm.findByMessageStatus(MessageRecord.MessageStatus.WAIT_AUDIT);
+        } else if (messageStatus.equals(MessageRecord.MessageStatus.RECEIVED)) {
+            // 审核通过消息已送达，查找审核通过记录
+            recordsInDB = mrm.findByMessageStatus(MessageRecord.MessageStatus.AUDIT_PASS);
+        } else if (messageStatus.equals(MessageRecord.MessageStatus.UNPASS_RESULT_RECEIVED)) {
+            // 审核未通过消息已送达，查找审核未通过记录
+            recordsInDB = mrm.findByMessageStatus(MessageRecord.MessageStatus.AUDIT_FAILD);
+        } else if (messageStatus.equals(MessageRecord.MessageStatus.READ)) {
+            // 审核通过消息已读，查找审核通过消息已送达记录
+            recordsInDB = mrm.findByMessageStatus(MessageRecord.MessageStatus.RECEIVED);
+        } else if (messageStatus.equals(MessageRecord.MessageStatus.UNPASS_RESULT_READ)) {
+            // 审核未通过消息已读，查找审核未通过消息已送达记录
+            recordsInDB =
+                    mrm.findByMessageStatus(MessageRecord.MessageStatus.UNPASS_RESULT_RECEIVED);
+        }
+
         // 判断待要更改的记录id是否在所有待审核记录id的子集中
-        if (!waitAuditRecords.containsAll(recordIds)) {
+        if (!recordsInDB.containsAll(recordIds)) {
             JLog.error("illegal recordIds=" + Arrays.toString(recordIds.toArray()), 104291138);
             return 2;
         }
-        Integer updateRet = mrm.batchUpdateMessageStatusByRecordId(messageStatus, recordIds);
+        Integer updateRet = mrm.batchUpdateMessageStatusByRecordId(messageStatus, recordIds,
+                System.currentTimeMillis()/1000);
         // 批量更新失败，回滚事务，返回false
         if (!updateRet.equals(recordIds.size())) {
             JLog.error("db error batch update messageStatus failed updateRet=" + updateRet,
