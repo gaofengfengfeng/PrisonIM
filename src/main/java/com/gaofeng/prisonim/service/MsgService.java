@@ -3,6 +3,7 @@ package com.gaofeng.prisonim.service;
 import com.didi.meta.javalib.IdUtil;
 import com.didi.meta.javalib.JLog;
 import com.gaofeng.prisonDBlib.beans.audit.SendType;
+import com.gaofeng.prisonDBlib.beans.msgrecord.WaitReadMsgDetail;
 import com.gaofeng.prisonDBlib.beans.msgrecord.WaitReadMsgs;
 import com.gaofeng.prisonDBlib.model.MessageRecord;
 import com.gaofeng.prisonDBlib.model.MessageRecordMapper;
@@ -120,7 +121,7 @@ public class MsgService {
      */
     public List<WaitReadMsgs> pullMsgs(Long receiverId) {
         JLog.info("pullMsgs service receiverId=" + receiverId);
-        List<WaitReadMsgs> waitReadMsgs = new ArrayList<>();
+        List<WaitReadMsgs> waitReadMsgs;
         try {
             waitReadMsgs = mrm.findWaitReadMsgs(receiverId);
         } catch (Exception e) {
@@ -129,5 +130,25 @@ public class MsgService {
             return null;
         }
         return waitReadMsgs;
+    }
+
+    /**
+     * 拉取审核未通过的消息
+     *
+     * @param spokeId
+     *
+     * @return
+     */
+    public List<WaitReadMsgDetail> pullUnpassMsgs(Long spokeId) {
+        JLog.info("pullUnpassMsgs service spokeId=" + spokeId);
+        List<WaitReadMsgDetail> unpassMsgs;
+        try {
+            unpassMsgs = mrm.findUnpassMsgs(spokeId);
+        } catch (Exception e) {
+            JLog.error("pullUnpassMsgs db error spokeId=" + spokeId + " errMsg=" + e.getMessage()
+                    , 104311522);
+            return null;
+        }
+        return unpassMsgs;
     }
 }

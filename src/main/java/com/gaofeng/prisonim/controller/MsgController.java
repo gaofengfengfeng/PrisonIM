@@ -2,8 +2,10 @@ package com.gaofeng.prisonim.controller;
 
 import com.didi.meta.javalib.JLog;
 import com.didi.meta.javalib.JResponse;
+import com.gaofeng.prisonDBlib.beans.msgrecord.WaitReadMsgDetail;
 import com.gaofeng.prisonDBlib.beans.msgrecord.WaitReadMsgs;
 import com.gaofeng.prisonim.beans.msg.PullReq;
+import com.gaofeng.prisonim.beans.msg.PullUnpassReq;
 import com.gaofeng.prisonim.beans.msg.SendReq;
 import com.gaofeng.prisonim.service.MsgService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +74,24 @@ public class MsgController {
         }
 
         jResponse.setData(waitReadMsgs);
+        return jResponse;
+    }
+
+    @RequestMapping(value = "/pullUnpass")
+    public JResponse pullUnpass(HttpServletRequest request,
+                                @RequestBody @Valid PullUnpassReq pullUnpassReq) {
+        JLog.info("pullUnpass spokeId=" + pullUnpassReq.getSpokeId());
+        JResponse jResponse = JResponse.initResponse(request, JResponse.class);
+
+        List<WaitReadMsgDetail> unpassMsgs = ms.pullUnpassMsgs(pullUnpassReq.getSpokeId());
+
+        if (unpassMsgs == null) {
+            jResponse.setErrNo(104311522);
+            jResponse.setErrMsg("db error");
+            return jResponse;
+        }
+
+        jResponse.setData(unpassMsgs);
         return jResponse;
     }
 }

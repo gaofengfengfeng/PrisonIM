@@ -58,6 +58,14 @@ public class AuditControler {
         return jResponse;
     }
 
+    /**
+     * 信息审核通过
+     *
+     * @param request
+     * @param auditReq
+     *
+     * @return
+     */
     @RequestMapping(value = "/pass")
     public JResponse auditPass(HttpServletRequest request, @RequestBody @Valid AuditReq auditReq) {
         JLog.info("auditPass policeId=" + auditReq.getPoliceId() + " recordIds=" +
@@ -89,6 +97,14 @@ public class AuditControler {
         return jResponse;
     }
 
+    /**
+     * 信息审核不通过
+     *
+     * @param request
+     * @param auditReq
+     *
+     * @return
+     */
     @RequestMapping(value = "/unpass")
     public JResponse auditUnpass(HttpServletRequest request,
                                  @RequestBody @Valid AuditReq auditReq) {
